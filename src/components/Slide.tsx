@@ -48,6 +48,33 @@ export function Slide({
             )}
           </div>
 
+          {slide.comparison && (
+            <div className="comparison-table-wrap">
+              <table className="comparison-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Dimension</th>
+                    <th scope="col">Traditional Script Multisig (2-of-3)</th>
+                    <th scope="col">FROST Threshold Multisig (2-of-3)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {slide.comparison.map((row) => (
+                    <tr key={row.dimension}>
+                      <th scope="row">{row.dimension}</th>
+                      <td data-label="Traditional Script Multisig (2-of-3)">
+                        {row.traditional}
+                      </td>
+                      <td data-label="FROST Threshold Multisig (2-of-3)">
+                        {row.frost}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
           {(slide.diagram || slide.code || slide.image) && (
             <div className="slide-visual">
               {slide.diagram && (

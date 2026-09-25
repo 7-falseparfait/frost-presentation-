@@ -1,4 +1,4 @@
-export type SlideKind = "title" | "content" | "placeholder";
+export type SlideKind = "title" | "content" | "placeholder" | "comparison";
 
 export type SlideData = {
   id: number;
@@ -10,6 +10,11 @@ export type SlideData = {
   supportingNote?: string;
   kicker?: string;
   content?: string[];
+  comparison?: {
+    dimension: string;
+    traditional: string;
+    frost: string;
+  }[];
   quote?: string;
   code?: string;
   codeLabel?: string;
@@ -21,6 +26,7 @@ export type SlideData = {
     | "frost-network"
     | "wallet-recipe"
     | "frost-resolution"
+    | "taproot-tweak"
     | "todo";
   diagramLabel?: string;
   speakerNotes: string;
@@ -254,22 +260,70 @@ The aggregate function combines Alice's and Bob's shares into one Schnorr signat
   {
     id: 9,
     section: "Comparison",
-    kind: "placeholder",
+    kind: "comparison",
     kicker: "08 / Comparison",
     title: "FROST vs traditional multisig",
-    subtitle:
-      "TODO: compare policy, coordination, privacy, and on-chain footprint.",
-    speakerNotes: "TODO: Add comparison notes.",
+    comparison: [
+      {
+        dimension: "Policy",
+        traditional: "Enforced on-chain via Bitcoin Script",
+        frost: "Enforced off-chain via threshold math",
+      },
+      {
+        dimension: "Coordination",
+        traditional: "Asynchronous PSBT passing",
+        frost: "Interactive signing rounds; interactive DKG setup",
+      },
+      {
+        dimension: "Privacy",
+        traditional: "Leaky: exposes all public keys and script rules",
+        frost: "Looks like a standard single-key Taproot spend (tr())",
+      },
+      {
+        dimension: "On-chain footprint",
+        traditional:
+          "Large and expensive: multiple keys and signatures in the script path",
+        frost: "Small and cheap: same key-path signature size as single-sig",
+      },
+    ],
+    speakerNotes: `Traditional script multisig encodes the spending policy in Bitcoin Script. The witness reveals the script and participating public keys, and the script-path spend is larger than a single-signature key-path spend.
+
+FROST keeps the threshold policy in the signing process. Participants coordinate interactively to produce one Schnorr signature, and a Taproot key-path spend looks like a standard single-key spend on-chain. DKG is an interactive setup step; signing also requires interactive rounds.`,
   },
   {
     id: 10,
     section: "Taproot",
-    kind: "placeholder",
+    kind: "content",
     kicker: "09 / Taproot",
-    title: "Taproot introduction",
-    subtitle: "TODO: establish the internal key, tweak, and output key.",
-    diagram: "todo",
-    speakerNotes: "TODO: Add Taproot introduction notes.",
+    title: "Taproot & Key Tweaking",
+    subtitle:
+      "Converting the abstract FROST joint key P into a valid Bitcoin Taproot Output Key Q.",
+    supportingNote:
+      "A raw FROST key is P. Only use dangerous_assume_tweaked when the FROST-TR ciphersuite has already produced Q.",
+    diagram: "taproot-tweak",
+    diagramLabel: "From FROST group key to P2TR address",
+    code: `fn create_taproot_address(
+    group_pubkey_package: &frost::keys::PublicKeyPackage,
+) -> Result<bitcoin::Address, Box<dyn std::error::Error>> {
+    let frost_key_bytes = group_pubkey_package.verifying_key().serialize()?;
+    let bitcoin_pubkey = bitcoin::secp256k1::PublicKey::from_slice(&frost_key_bytes)?;
+    let (x_only_key, _parity) = bitcoin_pubkey.x_only_public_key();
+
+    // Valid only when the FROST-TR ciphersuite has already produced Q.
+    let output_key = bitcoin::key::TweakedPublicKey::dangerous_assume_tweaked(x_only_key);
+    let address = bitcoin::Address::p2tr_tweaked(
+        output_key,
+        bitcoin::address::KnownHrp::Regtest,
+    );
+
+    Ok(address)
+}`,
+    codeLabel: "Rust / FROST-TR output key to regtest address",
+    speakerNotes: `Taproot does not use the untweaked FROST group key directly as the output key. The x-only internal key P is tweaked with the TapTweak hash and optional script-tree merkle root, producing Q = P + tG.
+
+The Rust example is specifically for an integration where the FROST-TR ciphersuite has already incorporated the Taproot tweak and its verifying key represents Q. dangerous_assume_tweaked only changes the type's interpretation; it does not calculate the tweak. With a generic FROST key P, calculate the BIP341 tweak and derive Q before constructing the address.
+
+The resulting P2TR address encodes the 32-byte x-only output key. The example uses Regtest; use the intended network for a real wallet.`,
   },
   {
     id: 11,

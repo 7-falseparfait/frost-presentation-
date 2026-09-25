@@ -4,6 +4,7 @@ type DiagramProps = {
     | "frost-network"
     | "wallet-recipe"
     | "frost-resolution"
+    | "taproot-tweak"
     | "todo";
   label?: string;
 };
@@ -84,6 +85,49 @@ export function Diagram({ type, label }: DiagramProps) {
           ↓
         </div>
         <div className="recipe-node recipe-output">ADDRESSES</div>
+      </div>
+    );
+  }
+
+  if (type === "taproot-tweak") {
+    return (
+      <div
+        className="diagram taproot-tweak-diagram"
+        aria-label="Taproot key tweak flow"
+      >
+        {label && <div className="diagram-label">{label}</div>}
+        <div className="taproot-tweak-step">
+          <strong>FROST DKG JOINT KEY (P)</strong>
+          <span>x-only internal key</span>
+        </div>
+        <div className="taproot-tweak-arrow" aria-hidden="true">
+          ↓
+        </div>
+        <div className="taproot-tweak-step">
+          <strong>COMPUTE TAPROOT TWEAK</strong>
+          <code>t = Hash_TapTweak(P || merkle_root)</code>
+        </div>
+        <div className="taproot-tweak-arrow" aria-hidden="true">
+          ↓
+        </div>
+        <div className="taproot-tweak-step taproot-tweak-math">
+          <strong>APPLY CURVE ADDITION</strong>
+          <code>Q = P + t·G</code>
+        </div>
+        <div className="taproot-tweak-arrow" aria-hidden="true">
+          ↓
+        </div>
+        <div className="taproot-tweak-step">
+          <strong>32-BYTE OUTPUT KEY (Q)</strong>
+          <span>x-only Taproot output key</span>
+        </div>
+        <div className="taproot-tweak-arrow" aria-hidden="true">
+          ↓
+        </div>
+        <div className="taproot-tweak-step taproot-tweak-address">
+          <strong>P2TR ADDRESS</strong>
+          <code>bc1p... · Regtest / Mainnet</code>
+        </div>
       </div>
     );
   }

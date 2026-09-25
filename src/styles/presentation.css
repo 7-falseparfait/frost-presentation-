@@ -124,6 +124,79 @@ button {
   grid-template-columns: minmax(0, 0.72fr) minmax(560px, 1.28fr);
   gap: clamp(30px, 5vw, 80px);
 }
+.slide-diagram-taproot-tweak .slide-body {
+  grid-template-columns: minmax(0, 0.8fr) minmax(480px, 1.2fr);
+  gap: clamp(28px, 5vw, 72px);
+}
+.slide-diagram-taproot-tweak .slide-copy h1 {
+  font-size: clamp(44px, 5vw, 72px);
+}
+.slide-diagram-taproot-tweak .slide-subtitle {
+  font-size: clamp(17px, 1.55vw, 22px);
+}
+.slide-diagram-taproot-tweak .slide-visual {
+  gap: 16px;
+}
+.slide-diagram-taproot-tweak .code-block pre {
+  padding: 14px 16px;
+  font-size: 10px;
+  line-height: 1.45;
+}
+.slide-comparison .slide-body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: clamp(24px, 4vh, 42px);
+  padding: 34px 0 28px;
+}
+.slide-comparison .slide-copy h1 {
+  max-width: none;
+  font-size: clamp(38px, 4.2vw, 58px);
+}
+.comparison-table-wrap {
+  width: 100%;
+}
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  text-align: left;
+}
+.comparison-table th,
+.comparison-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.comparison-table thead th {
+  color: var(--muted);
+  font: 500 11px/1.45 var(--mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.comparison-table thead th:first-child {
+  width: 19%;
+}
+.comparison-table thead th:nth-child(2),
+.comparison-table thead th:nth-child(3) {
+  width: 40.5%;
+}
+.comparison-table thead th:last-child {
+  color: var(--accent);
+}
+.comparison-table tbody th {
+  color: var(--ink);
+  font: 500 13px/1.45 var(--mono);
+}
+.comparison-table tbody td {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.comparison-table tbody td:last-child {
+  color: var(--ink);
+}
 .slide-title {
 }
 .slide-copy h1 {
@@ -307,6 +380,50 @@ button {
   font: 12px var(--mono);
   letter-spacing: 0.1em;
 }
+.taproot-tweak-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 18px 22px;
+  border: 1px solid var(--line);
+  background: rgba(25, 29, 32, 0.84);
+}
+.taproot-tweak-step {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding: 10px 13px;
+  border: 1px solid var(--line);
+  background: #202529;
+}
+.taproot-tweak-step strong {
+  color: var(--ink);
+  font: 500 10px/1.4 var(--mono);
+}
+.taproot-tweak-step span {
+  color: var(--muted);
+  font-size: 11px;
+}
+.taproot-tweak-step code {
+  color: var(--accent);
+  font: 11px var(--mono);
+  white-space: nowrap;
+}
+.taproot-tweak-math {
+  border-color: rgba(247, 147, 26, 0.55);
+}
+.taproot-tweak-address {
+  border-color: rgba(247, 147, 26, 0.7);
+  background: var(--accent-soft);
+}
+.taproot-tweak-arrow {
+  height: 18px;
+  color: var(--accent);
+  font: 15px/18px var(--mono);
+  text-align: center;
+}
 .recipe-diagram {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 44px minmax(170px, 0.9fr);
@@ -449,6 +566,75 @@ button {
   color: var(--accent);
   font: 22px/1 var(--mono);
   text-align: center;
+}
+
+@media (min-width: 801px) and (max-height: 720px) {
+  .slide-diagram-taproot-tweak {
+    padding-top: 20px;
+    padding-bottom: 64px;
+  }
+  .slide-diagram-taproot-tweak .slide-inner {
+    min-height: 0;
+    height: 100%;
+  }
+  .slide-diagram-taproot-tweak .slide-body {
+    grid-template-columns: minmax(270px, 0.8fr) minmax(0, 1.2fr);
+    gap: 28px;
+    padding: 12px 0;
+  }
+  .slide-diagram-taproot-tweak .slide-copy h1 {
+    font-size: clamp(40px, 4.5vw, 58px);
+  }
+  .slide-diagram-taproot-tweak .slide-subtitle {
+    margin-top: 16px;
+    font-size: 17px;
+  }
+  .slide-diagram-taproot-tweak .slide-supporting-note {
+    margin-top: 12px;
+    font-size: 12px;
+  }
+  .slide-diagram-taproot-tweak .slide-visual {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: center;
+    gap: 10px;
+  }
+  .taproot-tweak-diagram {
+    padding: 10px;
+  }
+  .taproot-tweak-diagram .diagram-label {
+    margin-bottom: 8px;
+    font-size: 8px;
+  }
+  .taproot-tweak-step {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 8px;
+  }
+  .taproot-tweak-step strong,
+  .taproot-tweak-step span,
+  .taproot-tweak-step code {
+    font-size: 8px;
+  }
+  .taproot-tweak-step code {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .taproot-tweak-arrow {
+    height: 12px;
+    font-size: 11px;
+    line-height: 12px;
+  }
+  .slide-diagram-taproot-tweak .code-block figcaption {
+    padding: 8px;
+    font-size: 8px;
+  }
+  .slide-diagram-taproot-tweak .code-block pre {
+    padding: 9px;
+    font-size: 8px;
+    line-height: 1.35;
+  }
 }
 
 .code-block {
@@ -614,6 +800,53 @@ button {
     gap: 14px;
     padding: 15px;
   }
+  .slide-comparison .slide-body {
+    gap: 18px;
+    padding: 24px 0;
+  }
+  .slide-comparison .slide-copy h1 {
+    font-size: clamp(36px, 9vw, 54px);
+  }
+  .comparison-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .comparison-table,
+  .comparison-table tbody,
+  .comparison-table tr,
+  .comparison-table th,
+  .comparison-table td {
+    display: block;
+    width: 100%;
+  }
+  .comparison-table tr {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .comparison-table tbody th {
+    padding: 8px 0;
+    border: 0;
+    color: var(--accent);
+    font-size: 12px;
+  }
+  .comparison-table tbody td {
+    display: grid;
+    grid-template-columns: minmax(115px, 0.7fr) minmax(0, 1.5fr);
+    gap: 12px;
+    padding: 8px 0;
+    border: 0;
+    font-size: 12px;
+  }
+  .comparison-table tbody td::before {
+    content: attr(data-label);
+    color: var(--faint);
+    font: 500 9px/1.5 var(--mono);
+    text-transform: uppercase;
+  }
   .diagram-node {
     padding: 10px;
   }
@@ -635,6 +868,56 @@ button {
   }
   .frost-resolution-diagram {
     padding: 15px;
+  }
+  .slide-diagram-taproot-tweak .slide-body {
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+    gap: 20px;
+    padding: 24px 0;
+  }
+  .slide-diagram-taproot-tweak {
+    display: block;
+    overflow-y: auto;
+    padding-bottom: 100px;
+  }
+  .slide-diagram-taproot-tweak .slide-inner {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+  }
+  .slide-diagram-taproot-tweak .slide-copy,
+  .slide-diagram-taproot-tweak .slide-visual,
+  .slide-diagram-taproot-tweak .code-block {
+    min-width: 0;
+    width: 100%;
+  }
+  .slide-diagram-taproot-tweak .slide-copy h1 {
+    font-size: clamp(38px, 8vw, 56px);
+  }
+  .slide-diagram-taproot-tweak .slide-subtitle {
+    margin-top: 14px;
+    font-size: 16px;
+  }
+  .slide-diagram-taproot-tweak .slide-supporting-note {
+    margin-top: 10px;
+    font-size: 12px;
+  }
+  .taproot-tweak-diagram {
+    padding: 12px;
+  }
+  .taproot-tweak-step {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 10px;
+  }
+  .taproot-tweak-step code {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .slide-diagram-taproot-tweak .code-block pre {
+    font-size: 9px;
   }
   .frost-definition {
     display: block;
