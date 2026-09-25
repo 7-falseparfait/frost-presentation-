@@ -1,4 +1,9 @@
-export type SlideKind = "title" | "content" | "placeholder" | "comparison";
+export type SlideKind =
+  | "title"
+  | "content"
+  | "placeholder"
+  | "comparison"
+  | "closing";
 
 export type SlideData = {
   id: number;
@@ -20,6 +25,7 @@ export type SlideData = {
   codeLabel?: string;
   output?: string;
   outputLabel?: string;
+  compactCode?: boolean;
   image?: { src: string; alt: string; caption?: string };
   diagram?:
     | "single-key"
@@ -27,6 +33,8 @@ export type SlideData = {
     | "wallet-recipe"
     | "frost-resolution"
     | "taproot-tweak"
+    | "taproot-paths"
+    | "frost-taproot-bridge"
     | "todo";
   diagramLabel?: string;
   speakerNotes: string;
@@ -72,33 +80,9 @@ Open source helps, but it does not automatically make an implementation secure. 
 
 With compatible implementations, a threshold quorum could also distribute trust across vendors. FROST does not make devices interoperable automatically; implementations still need compatible protocol rules, identifiers, ciphersuites, and key-package handling.
 
+The trust surface includes the device, firmware, cryptographic implementation, entropy source, and vendor supply chain. Independent implementations can diversify that risk, but they still need compatible protocols and ciphersuites.
+
 The goal is not simply to have multiple devices. The goal is to reduce concentrated trust.`,
-  },
-  {
-    id: 16,
-    section: "The problem",
-    kind: "content",
-    kicker: "01b / The problem",
-    title: "The trust surface is bigger than the key",
-    subtitle:
-      "One device can concentrate hardware, firmware, entropy, and vendor risk.",
-    code: `device
-  + implementation
-  + entropy
-  + vendor
-          |
-          v
-    concentrated trust`,
-    codeLabel: "Security model",
-    speakerNotes: `Hardware wallets are extremely useful, but a single signer asks us to trust more than a private key.
-
-We trust the physical device, the firmware, the cryptographic implementation, the entropy source, and the vendor's build and supply chain.
-
-Open source helps because we can inspect the code, but open source does not automatically mean secure. We still have to ask whether the implementation can be verified and reproduced.
-
-This is why compatible implementations from different vendors are interesting. FROST does not make those devices interoperable automatically, but a threshold quorum can reduce the consequences of one vendor or one implementation failing.
-
-The goal is not simply to have more devices. The goal is to reduce concentrated trust.`,
   },
   {
     id: 3,
@@ -297,11 +281,58 @@ FROST keeps the threshold policy in the signing process. Participants coordinate
     kicker: "09 / Taproot",
     title: "Taproot & Key Tweaking",
     subtitle:
-      "Converting the abstract FROST joint key P into a valid Bitcoin Taproot Output Key Q.",
+      "Converting the FROST joint key P into a valid Bitcoin Taproot Output Key Q.",
     supportingNote:
-      "A raw FROST key is P. Only use dangerous_assume_tweaked when the FROST-TR ciphersuite has already produced Q.",
+      "A raw FROST key is P. dangerous_assume_tweaked is only for a FROST-TR result that is already Q.",
     diagram: "taproot-tweak",
     diagramLabel: "From FROST group key to P2TR address",
+    speakerNotes: `Taproot does not use the untweaked FROST group key directly as the output key. The x-only internal key P is tweaked with the TapTweak hash and optional script-tree merkle root, producing Q = P + tG.
+
+The FROST-TR integration must produce a signature for the tweaked output key. dangerous_assume_tweaked only marks the key as tweaked for the Bitcoin API; it does not calculate the Taproot tweak. The following slides show the spend paths and how the threshold signature fits into the key path.`,
+  },
+  {
+    id: 11,
+    section: "Taproot",
+    kind: "content",
+    kicker: "10 / Taproot",
+    title: "Taproot has two spend paths",
+    subtitle:
+      "Key path: prove control of the output key. Script path: reveal and execute a committed spending condition.",
+    diagram: "taproot-paths",
+    diagramLabel: "Two ways to spend a P2TR output",
+    speakerNotes: `A Taproot output commits to an internal key and may also commit to a script tree.
+
+The key path spends by providing a Schnorr signature for the output key. The script path reveals the selected script and the witness data needed to execute it. A script tree can stay hidden when it is not used.
+
+This distinction sets up the FROST connection: if the group key is correctly tweaked for Taproot, a quorum can create the one signature needed by the key path.`,
+  },
+  {
+    id: 12,
+    section: "Taproot",
+    kind: "content",
+    kicker: "11 / Taproot",
+    title: "FROST puts 2-of-3 inside the key path",
+    subtitle:
+      "The quorum policy runs between signers; Bitcoin verifies one Schnorr signature under the Taproot output key.",
+    diagram: "frost-taproot-bridge",
+    diagramLabel: "Threshold coordination off-chain, one signature on-chain",
+    speakerNotes: `This is the key connection: FROST does not put a 2-of-3 script into the Taproot output. Two participants use their shares and interactive signing rounds to create a single Schnorr signature valid for the group's Taproot output key.
+
+The on-chain verifier sees a key-path spend and checks one signature. It does not learn that the key represents a 2-of-3 quorum or which participants took part.
+
+This depends on using a threshold protocol and Taproot tweak flow designed to produce a signature for the tweaked output key. A generic untweaked FROST group key is not automatically the Taproot output key.`,
+  },
+  {
+    id: 13,
+    section: "Implementation",
+    kind: "content",
+    kicker: "12 / Implementation",
+    title: "From Rust to a Taproot address",
+    subtitle:
+      "The FROST-TR output key becomes a standard Regtest P2TR address in Bitcoin software.",
+    compactCode: true,
+    supportingNote:
+      "dangerous_assume_tweaked marks an already-tweaked key; it does not compute the Taproot tweak.",
     code: `fn create_taproot_address(
     group_pubkey_package: &frost::keys::PublicKeyPackage,
 ) -> Result<bitcoin::Address, Box<dyn std::error::Error>> {
@@ -309,7 +340,7 @@ FROST keeps the threshold policy in the signing process. Participants coordinate
     let bitcoin_pubkey = bitcoin::secp256k1::PublicKey::from_slice(&frost_key_bytes)?;
     let (x_only_key, _parity) = bitcoin_pubkey.x_only_public_key();
 
-    // Valid only when the FROST-TR ciphersuite has already produced Q.
+    // FROST-TR must already have produced the tweaked output key Q.
     let output_key = bitcoin::key::TweakedPublicKey::dangerous_assume_tweaked(x_only_key);
     let address = bitcoin::Address::p2tr_tweaked(
         output_key,
@@ -318,58 +349,10 @@ FROST keeps the threshold policy in the signing process. Participants coordinate
 
     Ok(address)
 }`,
-    codeLabel: "Rust / FROST-TR output key to regtest address",
-    speakerNotes: `Taproot does not use the untweaked FROST group key directly as the output key. The x-only internal key P is tweaked with the TapTweak hash and optional script-tree merkle root, producing Q = P + tG.
+    codeLabel: "Rust / FROST-TR output key to Regtest P2TR",
+    speakerNotes: `This is the software-level handoff from the threshold protocol to a Bitcoin address. The FROST-TR integration must provide the x-only tweaked output key Q before this code calls dangerous_assume_tweaked. That method does not apply the BIP341 tweak; it asserts that the key is already tweaked so the Bitcoin API can use the appropriate type.
 
-The Rust example is specifically for an integration where the FROST-TR ciphersuite has already incorporated the Taproot tweak and its verifying key represents Q. dangerous_assume_tweaked only changes the type's interpretation; it does not calculate the tweak. With a generic FROST key P, calculate the BIP341 tweak and derive Q before constructing the address.
-
-The resulting P2TR address encodes the 32-byte x-only output key. The example uses Regtest; use the intended network for a real wallet.`,
-  },
-  {
-    id: 11,
-    section: "Taproot",
-    kind: "placeholder",
-    kicker: "10 / Taproot",
-    title: "Key path vs script path",
-    subtitle: "TODO: show the two ways a Taproot output can be spent.",
-    diagram: "todo",
-    speakerNotes: "TODO: Add key path and script path notes.",
-  },
-  {
-    id: 12,
-    section: "Taproot",
-    kind: "placeholder",
-    kicker: "11 / Taproot",
-    title: "FROST + Taproot",
-    subtitle: "TODO: connect a FROST group key to a Taproot key-path spend.",
-    diagram: "todo",
-    speakerNotes: "TODO: Add FROST and Taproot connection notes.",
-  },
-  {
-    id: 13,
-    section: "Implementation",
-    kind: "content",
-    kicker: "12 / Implementation",
-    title: "From Rust to a Taproot output",
-    subtitle: "The protocol result can become a normal-looking P2TR address.",
-    code: `let output_key =
-    bitcoin::key::TweakedPublicKey::
-        dangerous_assume_tweaked(x_only_key);
-
-let address = bitcoin::Address::p2tr_tweaked(
-    output_key,
-    bitcoin::address::KnownHrp::Regtest,
-);`,
-    codeLabel: "Rust / Taproot output",
-    output: `=== FROST TAPROOT OUTPUT KEY ===
-< x-only output key >
-
-=== TAPROOT ADDRESS ===
-< regtest P2TR address >`,
-    outputLabel: "Program output",
-    speakerNotes: `The demo converts the FROST verifying key into the Bitcoin public-key type, takes its x-only representation, and uses the Taproot output key to create a regtest P2TR address.
-
-This is the payoff for the audience: the coordination happens among the signers, but the resulting Bitcoin output can look like a normal Taproot output. The ciphersuite and tweak handling must match the library and integration being used.`,
+The address uses Regtest for development. For a real wallet, the network and ciphersuite/output-key handling must match the wallet's descriptor and signing implementation.`,
   },
   {
     id: 14,
@@ -397,10 +380,38 @@ This is the case study for the talk: FROST is not only a cryptographic primitive
   {
     id: 15,
     section: "Close",
-    kind: "placeholder",
+    kind: "content",
     kicker: "14 / Close",
-    title: "Key takeaways",
-    subtitle: "TODO: close with the ideas the audience should remember.",
-    speakerNotes: "TODO: Add closing notes and questions prompt.",
+    title: "Three things to take away",
+    subtitle: "Threshold efficiency. Deliberate coordination. Taproot privacy.",
+    content: [
+      "Efficiency: a 2-of-3 quorum produces one Schnorr signature with a standard key-path footprint.",
+      "Coordination: DKG requires synchronous setup; FROST signing uses interactive rounds.",
+      "Privacy: a Taproot key-path spend hides the quorum policy and participating public keys.",
+    ],
+    supportingNote:
+      "Trade-offs: cross-vendor support is early; nonce reuse can expose secrets, so firmware must enforce one-time use.",
+    speakerNotes: `To close, remember three things.
+
+First, threshold efficiency: a 2-of-3 quorum can produce one Schnorr signature, so the blockchain sees a normal-looking Taproot key-path spend rather than a multisig script.
+
+Second, coordination is not free. Initial DKG requires synchronous interaction. In Frostsnap's current flow, devices are physically daisy-chained for setup. FROST signing is also interactive, even though the final transaction is a single signature.
+
+Third, Taproot gives the on-chain privacy benefit: the key-path spend does not reveal the threshold policy or the participating public keys.
+
+There are practical trade-offs today. The hardware ecosystem is early; broad cross-vendor support depends on compatible ciphersuites, key tweaking, derivation, and protocol details. Nonces must never be reused; firmware must reliably generate and consume them exactly once because reuse can expose signing secrets. These are engineering challenges in bringing threshold cryptography into production Bitcoin hardware, not reasons to ignore the benefits.`,
+  },
+  {
+    id: 17,
+    section: "",
+    kind: "closing",
+    kicker: "",
+    title: "",
+    image: {
+      src: "/images/frosty.jpeg",
+      alt: "Frosty posing in a light-colored outfit",
+      caption: "Stay frosty.",
+    },
+    speakerNotes: "",
   },
 ];

@@ -13,7 +13,7 @@ export function Slide({
 
   return (
     <article
-      className={`slide slide-${slide.kind} ${slide.diagram ? `slide-diagram-${slide.diagram}` : ""} ${isActive ? "is-active" : ""}`}
+      className={`slide slide-${slide.kind} ${slide.diagram ? `slide-diagram-${slide.diagram}` : ""} ${slide.compactCode ? "slide-compact-code" : ""} ${isActive ? "is-active" : ""}`}
       aria-hidden={!isActive}
     >
       <div className="slide-inner">

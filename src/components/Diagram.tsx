@@ -5,6 +5,8 @@ type DiagramProps = {
     | "wallet-recipe"
     | "frost-resolution"
     | "taproot-tweak"
+    | "taproot-paths"
+    | "frost-taproot-bridge"
     | "todo";
   label?: string;
 };
@@ -127,6 +129,65 @@ export function Diagram({ type, label }: DiagramProps) {
         <div className="taproot-tweak-step taproot-tweak-address">
           <strong>P2TR ADDRESS</strong>
           <code>bc1p... · Regtest / Mainnet</code>
+        </div>
+      </div>
+    );
+  }
+
+  if (type === "taproot-paths") {
+    return (
+      <div
+        className="diagram taproot-paths-diagram"
+        aria-label="Taproot key path and script path comparison"
+      >
+        {label && <div className="diagram-label">{label}</div>}
+        <section className="taproot-path-card taproot-key-path">
+          <span>01 / KEY PATH</span>
+          <strong>Signature for output key Q</strong>
+          <p>One Schnorr signature. The committed script tree stays hidden.</p>
+          <code>key spend</code>
+        </section>
+        <section className="taproot-path-card">
+          <span>02 / SCRIPT PATH</span>
+          <strong>Execute a committed condition</strong>
+          <p>
+            Reveal the selected script and witness data when this path is used.
+          </p>
+          <code>script + witness</code>
+        </section>
+      </div>
+    );
+  }
+
+  if (type === "frost-taproot-bridge") {
+    return (
+      <div
+        className="diagram frost-taproot-bridge"
+        aria-label="FROST threshold signing into a Taproot key-path spend"
+      >
+        {label && <div className="diagram-label">{label}</div>}
+        <div className="frost-bridge-flow">
+          <section className="frost-bridge-step">
+            <span>OFF-CHAIN / POLICY</span>
+            <strong>2 of 3 shares</strong>
+            <p>Alice + Bob sign; Carol is not required.</p>
+          </section>
+          <span className="frost-bridge-arrow" aria-hidden="true">
+            →
+          </span>
+          <section className="frost-bridge-step">
+            <span>INTERACTIVE / FROST</span>
+            <strong>Threshold rounds</strong>
+            <p>Shares combine into one valid Schnorr signature.</p>
+          </section>
+          <span className="frost-bridge-arrow" aria-hidden="true">
+            →
+          </span>
+          <section className="frost-bridge-step frost-bridge-result">
+            <span>ON-CHAIN / KEY PATH</span>
+            <strong>One signature for Q</strong>
+            <p>Standard-looking P2TR spend; no quorum script revealed.</p>
+          </section>
         </div>
       </div>
     );

@@ -7,14 +7,14 @@ export function ProgressBar({ current, total }: ProgressBarProps) {
   return (
     <footer
       className="progress-bar"
-      aria-label={`Slide ${current} of ${total}`}
+      role="progressbar"
+      aria-label="Presentation progress"
+      aria-valuemin={0}
+      aria-valuemax={total}
+      aria-valuenow={current}
     >
       <span className="progress-track">
         <span style={{ width: `${(current / total) * 100}%` }} />
-      </span>
-      <span className="progress-count">
-        <strong>{String(current).padStart(2, "0")}</strong>
-        <span>/ {String(total).padStart(2, "0")}</span>
       </span>
     </footer>
   );
